@@ -29,7 +29,7 @@ local function createShadow(parent)
     shadow.ImageTransparency = 0.7
     shadow.Size = UDim2.new(1, 10, 1, 10)
     shadow.Position = UDim2.new(0, -5, 0, -5)
-    shadow.ZIndex = parent.ZIndex - 1
+    shadow.ZIndex = 0  -- Fixed: Set a specific ZIndex instead of using relative
     shadow.Parent = parent
     return shadow
 end
@@ -37,12 +37,14 @@ end
 function AstroGUI.CreateWindow(title, parent)
     local screenGui = Instance.new("ScreenGui")
     screenGui.Parent = parent
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling  -- Added: Proper Z-index behavior
     
     local mainFrame = Instance.new("Frame")
     mainFrame.Size = UDim2.new(0, 400, 0, 600)
     mainFrame.Position = UDim2.new(0.5, -200, 0.5, -300)
     mainFrame.BackgroundColor3 = THEME.background
     mainFrame.BorderSizePixel = 0
+    mainFrame.ZIndex = 1  -- Added: Base ZIndex
     mainFrame.Parent = screenGui
     applyRoundedCorners(mainFrame, 8)
     createShadow(mainFrame)
@@ -52,6 +54,7 @@ function AstroGUI.CreateWindow(title, parent)
     titleBar.Size = UDim2.new(1, 0, 0, 40)
     titleBar.BackgroundColor3 = THEME.foreground
     titleBar.BorderSizePixel = 0
+    titleBar.ZIndex = 2  -- Added: Increased ZIndex
     titleBar.Parent = mainFrame
     applyRoundedCorners(titleBar, 8)
 
@@ -64,6 +67,7 @@ function AstroGUI.CreateWindow(title, parent)
     titleLabel.TextSize = 18
     titleLabel.Font = Enum.Font.GothamBold
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.ZIndex = 2  -- Added: Matching ZIndex
     titleLabel.Parent = titleBar
 
     -- Content container
@@ -73,6 +77,7 @@ function AstroGUI.CreateWindow(title, parent)
     container.BackgroundTransparency = 1
     container.ScrollBarThickness = 4
     container.ScrollBarImageColor3 = THEME.accent
+    container.ZIndex = 2  -- Added: Matching ZIndex
     container.Parent = mainFrame
 
     -- Layout for container
@@ -82,6 +87,7 @@ function AstroGUI.CreateWindow(title, parent)
 
     return container
 end
+
 
 function AstroGUI.CreateLabel(parent, text, fontSize)
     local label = Instance.new("TextLabel")
