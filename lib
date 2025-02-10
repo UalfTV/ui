@@ -1,135 +1,305 @@
--- AstroGUI library
-AstroGUI = {}
+-- Enhanced AstroGUI library
+local AstroGUI = {}
 
-function AstroGUI.CreateWindow(title, width, height)
-    -- Create a window with the specified title, width, and height
-    print("Window created: " .. title .. " (" .. width .. "x" .. height .. ")")
-    return {title = title, width = width, height = height}
+-- Theme colors
+local THEME = {
+    background = Color3.fromRGB(30, 30, 35),
+    foreground = Color3.fromRGB(40, 40, 45),
+    accent = Color3.fromRGB(65, 105, 225),
+    text = Color3.fromRGB(255, 255, 255),
+    textDark = Color3.fromRGB(200, 200, 200),
+    border = Color3.fromRGB(60, 60, 65),
+    hover = Color3.fromRGB(70, 70, 75),
+    success = Color3.fromRGB(46, 204, 113),
+    error = Color3.fromRGB(231, 76, 60)
+}
+
+-- Utility functions
+local function applyRoundedCorners(instance, radius)
+    local uiCorner = Instance.new("UICorner")
+    uiCorner.CornerRadius = UDim.new(0, radius or 4)
+    uiCorner.Parent = instance
 end
 
-function AstroGUI.CreateLabel(parent, text, x, y)
-    -- Create a label within the specified parent element
-    print("Label created: " .. text .. " at (" .. x .. "," .. y .. ") in " .. parent.title)
+local function createShadow(parent)
+    local shadow = Instance.new("ImageLabel")
+    shadow.BackgroundTransparency = 1
+    shadow.Image = "rbxassetid://297774371" -- Replace with appropriate shadow asset
+    shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+    shadow.ImageTransparency = 0.7
+    shadow.Size = UDim2.new(1, 10, 1, 10)
+    shadow.Position = UDim2.new(0, -5, 0, -5)
+    shadow.ZIndex = parent.ZIndex - 1
+    shadow.Parent = parent
+    return shadow
 end
 
-function AstroGUI.CreateTab(parent, title)
-    -- Create a tab within the specified parent element
-    print("Tab created: " .. title .. " in " .. parent.title)
-    return {title = title, parent = parent.title}
+function AstroGUI.CreateWindow(title, parent)
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Parent = parent
+    
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Size = UDim2.new(0, 400, 0, 600)
+    mainFrame.Position = UDim2.new(0.5, -200, 0.5, -300)
+    mainFrame.BackgroundColor3 = THEME.background
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Parent = screenGui
+    applyRoundedCorners(mainFrame, 8)
+    createShadow(mainFrame)
+
+    -- Title bar
+    local titleBar = Instance.new("Frame")
+    titleBar.Size = UDim2.new(1, 0, 0, 40)
+    titleBar.BackgroundColor3 = THEME.foreground
+    titleBar.BorderSizePixel = 0
+    titleBar.Parent = mainFrame
+    applyRoundedCorners(titleBar, 8)
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, -20, 1, 0)
+    titleLabel.Position = UDim2.new(0, 10, 0, 0)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = title
+    titleLabel.TextColor3 = THEME.text
+    titleLabel.TextSize = 18
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Parent = titleBar
+
+    -- Content container
+    local container = Instance.new("ScrollingFrame")
+    container.Size = UDim2.new(1, -20, 1, -60)
+    container.Position = UDim2.new(0, 10, 0, 50)
+    container.BackgroundTransparency = 1
+    container.ScrollBarThickness = 4
+    container.ScrollBarImageColor3 = THEME.accent
+    container.Parent = mainFrame
+
+    -- Layout for container
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0, 10)
+    layout.Parent = container
+
+    return container
 end
 
-function AstroGUI.CreateSlider(parent, label, min, max, value, x, y, callback)
-    -- Create a slider within the specified parent element
-    print("Slider created: " .. label .. " range (" .. min .. "-" .. max .. "), value " .. value .. " at (" .. x .. "," .. y .. ") in " .. parent.title)
-    -- Simulate a slider change event
-    print("Slider value changed: " .. value)
-    if callback then
+function AstroGUI.CreateLabel(parent, text, fontSize)
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 0, 25)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = THEME.text
+    label.TextSize = fontSize or 14
+    label.Font = Enum.Font.Gotham
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = parent
+    return label
+end
+
+function AstroGUI.CreateButton(parent, text, callback)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, 0, 0, 35)
+    button.BackgroundColor3 = THEME.accent
+    button.Text = text
+    button.TextColor3 = THEME.text
+    button.TextSize = 14
+    button.Font = Enum.Font.GothamSemibold
+    button.Parent = parent
+    applyRoundedCorners(button)
+
+    -- Hover effect
+    button.MouseEnter:Connect(function()
+        button.BackgroundColor3 = THEME.hover
+    end)
+    button.MouseLeave:Connect(function()
+        button.BackgroundColor3 = THEME.accent
+    end)
+
+    button.MouseButton1Click:Connect(callback)
+    return button
+end
+
+function AstroGUI.CreateSlider(parent, text, min, max, default, callback)
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 0, 60)
+    container.BackgroundTransparency = 1
+    container.Parent = parent
+
+    local label = AstroGUI.CreateLabel(container, text)
+    label.Size = UDim2.new(1, -50, 0, 25)
+
+    local valueLabel = AstroGUI.CreateLabel(container, tostring(default))
+    valueLabel.Size = UDim2.new(0, 45, 0, 25)
+    valueLabel.Position = UDim2.new(1, -45, 0, 0)
+    valueLabel.TextXAlignment = Enum.TextXAlignment.Right
+
+    local sliderBar = Instance.new("Frame")
+    sliderBar.Size = UDim2.new(1, 0, 0, 6)
+    sliderBar.Position = UDim2.new(0, 0, 0, 35)
+    sliderBar.BackgroundColor3 = THEME.foreground
+    sliderBar.Parent = container
+    applyRoundedCorners(sliderBar, 3)
+
+    local sliderFill = Instance.new("Frame")
+    sliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+    sliderFill.BackgroundColor3 = THEME.accent
+    sliderFill.Parent = sliderBar
+    applyRoundedCorners(sliderFill, 3)
+
+    local function updateSlider(input)
+        local pos = math.clamp((input.Position.X - sliderBar.AbsolutePosition.X) / sliderBar.AbsoluteSize.X, 0, 1)
+        local value = math.floor(min + pos * (max - min))
+        sliderFill.Size = UDim2.new(pos, 0, 1, 0)
+        valueLabel.Text = tostring(value)
         callback(value)
     end
+
+    -- Slider interaction
+    local isDragging = false
+    sliderBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDragging = true
+            updateSlider(input)
+        end
+    end)
+
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            updateSlider(input)
+        end
+    end)
+
+    game:GetService("UserInputService").InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDragging = false
+        end
+    end)
+
+    return container
 end
 
-function AstroGUI.CreateParagraph(parent, text, x, y)
-    -- Create a paragraph within the specified parent element
-    print("Paragraph created: " .. text .. " at (" .. x .. "," .. y .. ") in " .. parent.title)
+function AstroGUI.CreateCheckbox(parent, text, default, callback)
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 0, 30)
+    container.BackgroundTransparency = 1
+    container.Parent = parent
+
+    local checkbox = Instance.new("Frame")
+    checkbox.Size = UDim2.new(0, 20, 0, 20)
+    checkbox.Position = UDim2.new(0, 0, 0, 5)
+    checkbox.BackgroundColor3 = THEME.foreground
+    checkbox.Parent = container
+    applyRoundedCorners(checkbox, 4)
+
+    local checkmark = Instance.new("ImageLabel")
+    checkmark.Size = UDim2.new(0.8, 0, 0.8, 0)
+    checkmark.Position = UDim2.new(0.1, 0, 0.1, 0)
+    checkmark.BackgroundTransparency = 1
+    checkmark.Image = "rbxassetid://5228254295" -- Replace with appropriate checkmark asset
+    checkmark.ImageColor3 = THEME.success
+    checkmark.ImageTransparency = default and 0 or 1
+    checkmark.Parent = checkbox
+
+    local label = AstroGUI.CreateLabel(container, text)
+    label.Position = UDim2.new(0, 30, 0, 0)
+    label.Size = UDim2.new(1, -30, 1, 0)
+
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, 0, 1, 0)
+    button.BackgroundTransparency = 1
+    button.Text = ""
+    button.Parent = container
+
+    local checked = default
+    button.MouseButton1Click:Connect(function()
+        checked = not checked
+        checkmark.ImageTransparency = checked and 0 or 1
+        callback(checked)
+    end)
+
+    return container
 end
 
-function AstroGUI.CreateStatusBar(parent, text, x, y, width)
-    -- Create a status bar within the specified parent element
-    print("StatusBar created: " .. text .. " at (" .. x .. "," .. y .. "), width " .. width .. " in " .. parent.title)
-end
+function AstroGUI.CreateDropdown(parent, text, options, default, callback)
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 0, 65)
+    container.BackgroundTransparency = 1
+    container.Parent = parent
 
-function AstroGUI.CreateButton(parent, text, x, y, callback)
-    -- Create a button within the specified parent element
-    print("Button created: " .. text .. " at (" .. x .. "," .. y .. ") in " .. parent.title)
-    -- Simulate a button click event
-    print("Button clicked: " .. text)
-    if callback then
-        callback()
+    local label = AstroGUI.CreateLabel(container, text)
+
+    local dropdown = Instance.new("TextButton")
+    dropdown.Size = UDim2.new(1, 0, 0, 35)
+    dropdown.Position = UDim2.new(0, 0, 0, 30)
+    dropdown.BackgroundColor3 = THEME.foreground
+    dropdown.Text = default or options[1]
+    dropdown.TextColor3 = THEME.text
+    dropdown.TextSize = 14
+    dropdown.Font = Enum.Font.Gotham
+    dropdown.Parent = container
+    applyRoundedCorners(dropdown)
+
+    local optionsFrame = Instance.new("Frame")
+    optionsFrame.Size = UDim2.new(1, 0, 0, #options * 35)
+    optionsFrame.Position = UDim2.new(0, 0, 1, 5)
+    optionsFrame.BackgroundColor3 = THEME.foreground
+    optionsFrame.Visible = false
+    optionsFrame.ZIndex = 10
+    optionsFrame.Parent = dropdown
+    applyRoundedCorners(optionsFrame)
+
+    for i, option in ipairs(options) do
+        local optionButton = Instance.new("TextButton")
+        optionButton.Size = UDim2.new(1, 0, 0, 35)
+        optionButton.Position = UDim2.new(0, 0, 0, (i-1) * 35)
+        optionButton.BackgroundTransparency = 1
+        optionButton.Text = option
+        optionButton.TextColor3 = THEME.text
+        optionButton.TextSize = 14
+        optionButton.Font = Enum.Font.Gotham
+        optionButton.ZIndex = 10
+        optionButton.Parent = optionsFrame
+
+        optionButton.MouseButton1Click:Connect(function()
+            dropdown.Text = option
+            optionsFrame.Visible = false
+            callback(option)
+        end)
     end
+
+    dropdown.MouseButton1Click:Connect(function()
+        optionsFrame.Visible = not optionsFrame.Visible
+    end)
+
+    return container
 end
 
-function AstroGUI.CreateSearchBar(parent, placeholder, x, y, width, callback)
-    -- Create a search bar within the specified parent element
-    print("SearchBar created: placeholder '" .. placeholder .. "' at (" .. x .. "," .. y .. "), width " .. width .. " in " .. parent.title)
-    -- Simulate a search event
-    print("Search executed with query: " .. placeholder)
-    if callback then
-        callback(placeholder)
+function AstroGUI.CreateProgressBar(parent, text)
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 0, 50)
+    container.BackgroundTransparency = 1
+    container.Parent = parent
+
+    local label = AstroGUI.CreateLabel(container, text)
+
+    local progressBar = Instance.new("Frame")
+    progressBar.Size = UDim2.new(1, 0, 0, 10)
+    progressBar.Position = UDim2.new(0, 0, 0, 30)
+    progressBar.BackgroundColor3 = THEME.foreground
+    progressBar.Parent = container
+    applyRoundedCorners(progressBar, 5)
+
+    local fill = Instance.new("Frame")
+    fill.Size = UDim2.new(0, 0, 1, 0)
+    fill.BackgroundColor3 = THEME.accent
+    fill.Parent = progressBar
+    applyRoundedCorners(fill, 5)
+
+    local function updateProgress(value)
+        fill.Size = UDim2.new(math.clamp(value, 0, 1), 0, 1, 0)
     end
+
+    return container, updateProgress
 end
 
-function AstroGUI.CreateCheckbox(parent, label, x, y, callback)
-    -- Create a checkbox within the specified parent element
-    print("Checkbox created: " .. label .. " at (" .. x .. "," .. y .. ") in " .. parent.title)
-    -- Simulate a checkbox toggle event
-    print("Checkbox toggled: " .. label)
-    if callback then
-        callback()
-    end
-end
-
-function AstroGUI.CreateRadioButton(parent, label, group, x, y, callback)
-    -- Create a radio button within the specified parent element
-    print("RadioButton created: " .. label .. " in group " .. group .. " at (" .. x .. "," .. y .. ") in " .. parent.title)
-    -- Simulate a radio button selection event
-    print("RadioButton selected: " .. label)
-    if callback then
-        callback()
-    end
-end
-
-function AstroGUI.CreateDropdown(parent, options, x, y, callback)
-    -- Create a dropdown menu within the specified parent element
-    print("Dropdown created: options " .. table.concat(options, ", ") .. " at (" .. x .. "," .. y .. ") in " .. parent.title)
-    -- Simulate a dropdown selection event
-    local selectedOption = options[1]
-    print("Dropdown selection: " .. selectedOption)
-    if callback then
-        callback(selectedOption)
-    end
-end
-
-function AstroGUI.CreateTextInput(parent, placeholder, x, y, width, callback)
-    -- Create a text input field within the specified parent element
-    print("TextInput created: placeholder '" .. placeholder .. "' at (" .. x .. "," .. y .. "), width " .. width .. " in " .. parent.title)
-    -- Simulate a text input event
-    print("TextInput value entered: " .. placeholder)
-    if callback then
-        callback(placeholder)
-    end
-end
-
-function AstroGUI.CreateProgressBar(parent, value, max, x, y, width)
-    -- Create a progress bar within the specified parent element
-    print("ProgressBar created: value " .. value .. "/" .. max .. " at (" .. x .. "," .. y .. "), width " .. width .. " in " .. parent.title)
-end
-
-function AstroGUI.CreateImage(parent, imagePath, x, y, width, height)
-    -- Create an image display within the specified parent element
-    print("Image created: " .. imagePath .. " at (" .. x .. "," .. y .. "), size (" .. width .. "x" .. height .. ") in " .. parent.title)
-end
-
-function AstroGUI.CreateTooltip(parent, text, x, y)
-    -- Create a tooltip within the specified parent element
-    print("Tooltip created: " .. text .. " at (" .. x .. "," .. y .. ") in " .. parent.title)
-end
-
--- Example usage to recreate the UI from the image
-local myWindow = AstroGUI.CreateWindow("Stylo", 400, 600)
-
-AstroGUI.CreateLabel(myWindow, "I'm Mr. Meeseeks!", 10, 10)
-AstroGUI.CreateButton(myWindow, "Click Me!", 10, 30, function()
-    print("Button 'Click Me!' clicked!")
-end)
-AstroGUI.CreateButton(myWindow, "Toggle Me!", 10, 60, function()
-    print("Button 'Toggle Me!' clicked!")
-end)
-AstroGUI.CreateSlider(myWindow, "Modifiers Slider", 0, 100, 50, 10, 90, function(value)
-    print("Slider value: " .. value)
-end)
-AstroGUI.CreateSlider(myWindow, "Modifiers Slider", 0, 100, 75, 10, 120, function(value)
-    print("Slider value: " .. value)
-end)
-AstroGUI.CreateDropdown(myWindow, {"Pick An Egg", "Super Magic Egg"}, 10, 150, function(selected)
-    print("Dropdown selection: " .. selected)
-end)
+return AstroGUI
