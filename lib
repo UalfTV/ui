@@ -1,0 +1,135 @@
+-- AstroGUI library
+AstroGUI = {}
+
+function AstroGUI.CreateWindow(title, width, height)
+    -- Create a window with the specified title, width, and height
+    print("Window created: " .. title .. " (" .. width .. "x" .. height .. ")")
+    return {title = title, width = width, height = height}
+end
+
+function AstroGUI.CreateLabel(parent, text, x, y)
+    -- Create a label within the specified parent element
+    print("Label created: " .. text .. " at (" .. x .. "," .. y .. ") in " .. parent.title)
+end
+
+function AstroGUI.CreateTab(parent, title)
+    -- Create a tab within the specified parent element
+    print("Tab created: " .. title .. " in " .. parent.title)
+    return {title = title, parent = parent.title}
+end
+
+function AstroGUI.CreateSlider(parent, label, min, max, value, x, y, callback)
+    -- Create a slider within the specified parent element
+    print("Slider created: " .. label .. " range (" .. min .. "-" .. max .. "), value " .. value .. " at (" .. x .. "," .. y .. ") in " .. parent.title)
+    -- Simulate a slider change event
+    print("Slider value changed: " .. value)
+    if callback then
+        callback(value)
+    end
+end
+
+function AstroGUI.CreateParagraph(parent, text, x, y)
+    -- Create a paragraph within the specified parent element
+    print("Paragraph created: " .. text .. " at (" .. x .. "," .. y .. ") in " .. parent.title)
+end
+
+function AstroGUI.CreateStatusBar(parent, text, x, y, width)
+    -- Create a status bar within the specified parent element
+    print("StatusBar created: " .. text .. " at (" .. x .. "," .. y .. "), width " .. width .. " in " .. parent.title)
+end
+
+function AstroGUI.CreateButton(parent, text, x, y, callback)
+    -- Create a button within the specified parent element
+    print("Button created: " .. text .. " at (" .. x .. "," .. y .. ") in " .. parent.title)
+    -- Simulate a button click event
+    print("Button clicked: " .. text)
+    if callback then
+        callback()
+    end
+end
+
+function AstroGUI.CreateSearchBar(parent, placeholder, x, y, width, callback)
+    -- Create a search bar within the specified parent element
+    print("SearchBar created: placeholder '" .. placeholder .. "' at (" .. x .. "," .. y .. "), width " .. width .. " in " .. parent.title)
+    -- Simulate a search event
+    print("Search executed with query: " .. placeholder)
+    if callback then
+        callback(placeholder)
+    end
+end
+
+function AstroGUI.CreateCheckbox(parent, label, x, y, callback)
+    -- Create a checkbox within the specified parent element
+    print("Checkbox created: " .. label .. " at (" .. x .. "," .. y .. ") in " .. parent.title)
+    -- Simulate a checkbox toggle event
+    print("Checkbox toggled: " .. label)
+    if callback then
+        callback()
+    end
+end
+
+function AstroGUI.CreateRadioButton(parent, label, group, x, y, callback)
+    -- Create a radio button within the specified parent element
+    print("RadioButton created: " .. label .. " in group " .. group .. " at (" .. x .. "," .. y .. ") in " .. parent.title)
+    -- Simulate a radio button selection event
+    print("RadioButton selected: " .. label)
+    if callback then
+        callback()
+    end
+end
+
+function AstroGUI.CreateDropdown(parent, options, x, y, callback)
+    -- Create a dropdown menu within the specified parent element
+    print("Dropdown created: options " .. table.concat(options, ", ") .. " at (" .. x .. "," .. y .. ") in " .. parent.title)
+    -- Simulate a dropdown selection event
+    local selectedOption = options[1]
+    print("Dropdown selection: " .. selectedOption)
+    if callback then
+        callback(selectedOption)
+    end
+end
+
+function AstroGUI.CreateTextInput(parent, placeholder, x, y, width, callback)
+    -- Create a text input field within the specified parent element
+    print("TextInput created: placeholder '" .. placeholder .. "' at (" .. x .. "," .. y .. "), width " .. width .. " in " .. parent.title)
+    -- Simulate a text input event
+    print("TextInput value entered: " .. placeholder)
+    if callback then
+        callback(placeholder)
+    end
+end
+
+function AstroGUI.CreateProgressBar(parent, value, max, x, y, width)
+    -- Create a progress bar within the specified parent element
+    print("ProgressBar created: value " .. value .. "/" .. max .. " at (" .. x .. "," .. y .. "), width " .. width .. " in " .. parent.title)
+end
+
+function AstroGUI.CreateImage(parent, imagePath, x, y, width, height)
+    -- Create an image display within the specified parent element
+    print("Image created: " .. imagePath .. " at (" .. x .. "," .. y .. "), size (" .. width .. "x" .. height .. ") in " .. parent.title)
+end
+
+function AstroGUI.CreateTooltip(parent, text, x, y)
+    -- Create a tooltip within the specified parent element
+    print("Tooltip created: " .. text .. " at (" .. x .. "," .. y .. ") in " .. parent.title)
+end
+
+-- Example usage to recreate the UI from the image
+local myWindow = AstroGUI.CreateWindow("Stylo", 400, 600)
+
+AstroGUI.CreateLabel(myWindow, "I'm Mr. Meeseeks!", 10, 10)
+AstroGUI.CreateButton(myWindow, "Click Me!", 10, 30, function()
+    print("Button 'Click Me!' clicked!")
+end)
+AstroGUI.CreateButton(myWindow, "Toggle Me!", 10, 60, function()
+    print("Button 'Toggle Me!' clicked!")
+end)
+AstroGUI.CreateSlider(myWindow, "Modifiers Slider", 0, 100, 50, 10, 90, function(value)
+    print("Slider value: " .. value)
+end)
+AstroGUI.CreateSlider(myWindow, "Modifiers Slider", 0, 100, 75, 10, 120, function(value)
+    print("Slider value: " .. value)
+end)
+AstroGUI.CreateDropdown(myWindow, {"Pick An Egg", "Super Magic Egg"}, 10, 150, function(selected)
+    print("Dropdown selection: " .. selected)
+end)
