@@ -1,311 +1,717 @@
--- Enhanced AstroGUI library
-local AstroGUI = {}
 
--- Theme colors
-local THEME = {
-    background = Color3.fromRGB(30, 30, 35),
-    foreground = Color3.fromRGB(40, 40, 45),
-    accent = Color3.fromRGB(65, 105, 225),
-    text = Color3.fromRGB(255, 255, 255),
-    textDark = Color3.fromRGB(200, 200, 200),
-    border = Color3.fromRGB(60, 60, 65),
-    hover = Color3.fromRGB(70, 70, 75),
-    success = Color3.fromRGB(46, 204, 113),
-    error = Color3.fromRGB(231, 76, 60)
+
+
+--[[ 
+    ModernUI Library v1.0
+    Características completas:
+    - Sistema de ventanas múltiples
+    - Controles interactivos modernos
+    - Temas personalizables
+    - Guardado de configuración
+    - Animaciones suaves
+]]
+
+local ModernUI = {}
+ModernUI.__index = ModernUI
+
+-- Servicios
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
+
+-- Constantes
+local TWEEN_INFO = TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+local SAVE_FILE_NAME = "ModernUI_Settings"
+
+-- Temas
+ModernUI.Themes = {
+    Dark = {
+        Primary = Color3.fromRGB(18, 18, 18),
+        Secondary = Color3.fromRGB(25, 25, 25),
+        Accent = Color3.fromRGB(66, 134, 245),
+        Text = Color3.fromRGB(255, 255, 255),
+        SubText = Color3.fromRGB(180, 180, 180),
+        Border = Color3.fromRGB(35, 35, 35),
+        Shadow = Color3.fromRGB(0, 0, 0),
+        Success = Color3.fromRGB(46, 204, 113),
+        Warning = Color3.fromRGB(241, 196, 15),
+        Error = Color3.fromRGB(231, 76, 60),
+        Hover = Color3.fromRGB(30, 30, 30),
+        DarkAccent = Color3.fromRGB(46, 94, 170)
+    },
+    Light = {
+        Primary = Color3.fromRGB(240, 240, 240),
+        Secondary = Color3.fromRGB(250, 250, 250),
+        Accent = Color3.fromRGB(66, 134, 245),
+        Text = Color3.fromRGB(40, 40, 40),
+        SubText = Color3.fromRGB(100, 100, 100),
+        Border = Color3.fromRGB(200, 200, 200),
+        Shadow = Color3.fromRGB(180, 180, 180),
+        Success = Color3.fromRGB(46, 204, 113),
+        Warning = Color3.fromRGB(241, 196, 15),
+        Error = Color3.fromRGB(231, 76, 60),
+        Hover = Color3.fromRGB(245, 245, 245),
+        DarkAccent = Color3.fromRGB(46, 94, 170)
+    }
 }
 
--- Utility functions
-local function applyRoundedCorners(instance, radius)
-    local uiCorner = Instance.new("UICorner")
-    uiCorner.CornerRadius = UDim.new(0, radius or 4)
-    uiCorner.Parent = instance
+-- Configuración por defecto
+local DefaultConfig = {
+    Theme = "Dark",
+    WindowSize = Vector2.new(800, 500),
+    MinSize = Vector2.new(400, 300),
+    MaxSize = Vector2.new(1200, 800),
+    SaveEnabled = true,
+    AnimationsEnabled = true,
+    DefaultFont = Enum.Font.GothamMedium,
+    DefaultTextSize = 14,
+    CornerRadius = 8,
+    ElementPadding = 5
+}
+
+-- Utilidades
+local function CreateElement(className, properties)
+    local element = Instance.new(className)
+    for property, value in pairs(properties) do
+        element[property] = value
+    end
+    return element
 end
 
-local function createShadow(parent)
-    local shadow = Instance.new("ImageLabel")
-    shadow.BackgroundTransparency = 1
-    shadow.Image = "rbxassetid://297774371" -- Replace with appropriate shadow asset
-    shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-    shadow.ImageTransparency = 0.7
-    shadow.Size = UDim2.new(1, 10, 1, 10)
-    shadow.Position = UDim2.new(0, -5, 0, -5)
-    shadow.ZIndex = 0  -- Fixed: Set a specific ZIndex instead of using relative
-    shadow.Parent = parent
+local function ApplyRounding(instance, radius)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, radius or DefaultConfig.CornerRadius)
+    corner.Parent = instance
+    return corner
+end
+
+local function ApplyStroke(instance, color, thickness)
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = color
+    stroke.Thickness = thickness or 1
+    stroke.Parent = instance
+    return stroke
+end
+
+local function ApplyShadow(instance, transparency)
+    local shadow = CreateElement("ImageLabel", {
+        Name = "Shadow",
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0.5, 0, 0.5, 2),
+        Size = UDim2.new(1, 4, 1, 4),
+        ZIndex = -1,
+        Image = "rbxassetid://7912134082",
+        ImageColor3 = Color3.fromRGB(0, 0, 0),
+        ImageTransparency = transparency or 0.5,
+        ScaleType = Enum.ScaleType.Slice,
+        SliceCenter = Rect.new(4, 4, 296, 296)
+    })
+    shadow.Parent = instance
     return shadow
 end
 
-function AstroGUI.CreateWindow(title, parent)
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Parent = parent
-    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling  -- Added: Proper Z-index behavior
+local function CreateTween(instance, properties, info)
+    return TweenService:Create(
+        instance,
+        info or TWEEN_INFO,
+        properties
+    )
+end
+
+local function Lerp(a, b, t)
+    return a + (b - a) * t
+end
+
+-- Constructor principal
+function ModernUI.new(config)
+    local self = setmetatable({}, ModernUI)
+    self.Config = table.clone(DefaultConfig)
     
-    local mainFrame = Instance.new("Frame")
-    mainFrame.Size = UDim2.new(0, 400, 0, 600)
-    mainFrame.Position = UDim2.new(0.5, -200, 0.5, -300)
-    mainFrame.BackgroundColor3 = THEME.background
-    mainFrame.BorderSizePixel = 0
-    mainFrame.ZIndex = 1  -- Added: Base ZIndex
-    mainFrame.Parent = screenGui
-    applyRoundedCorners(mainFrame, 8)
-    createShadow(mainFrame)
-
-    -- Title bar
-    local titleBar = Instance.new("Frame")
-    titleBar.Size = UDim2.new(1, 0, 0, 40)
-    titleBar.BackgroundColor3 = THEME.foreground
-    titleBar.BorderSizePixel = 0
-    titleBar.ZIndex = 2  -- Added: Increased ZIndex
-    titleBar.Parent = mainFrame
-    applyRoundedCorners(titleBar, 8)
-
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, -20, 1, 0)
-    titleLabel.Position = UDim2.new(0, 10, 0, 0)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = title
-    titleLabel.TextColor3 = THEME.text
-    titleLabel.TextSize = 18
-    titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.ZIndex = 2  -- Added: Matching ZIndex
-    titleLabel.Parent = titleBar
-
-    -- Content container
-    local container = Instance.new("ScrollingFrame")
-    container.Size = UDim2.new(1, -20, 1, -60)
-    container.Position = UDim2.new(0, 10, 0, 50)
-    container.BackgroundTransparency = 1
-    container.ScrollBarThickness = 4
-    container.ScrollBarImageColor3 = THEME.accent
-    container.ZIndex = 2  -- Added: Matching ZIndex
-    container.Parent = mainFrame
-
-    -- Layout for container
-    local layout = Instance.new("UIListLayout")
-    layout.Padding = UDim.new(0, 10)
-    layout.Parent = container
-
-    return container
-end
-
-
-function AstroGUI.CreateLabel(parent, text, fontSize)
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, 0, 0, 25)
-    label.BackgroundTransparency = 1
-    label.Text = text
-    label.TextColor3 = THEME.text
-    label.TextSize = fontSize or 14
-    label.Font = Enum.Font.Gotham
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = parent
-    return label
-end
-
-function AstroGUI.CreateButton(parent, text, callback)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, 0, 0, 35)
-    button.BackgroundColor3 = THEME.accent
-    button.Text = text
-    button.TextColor3 = THEME.text
-    button.TextSize = 14
-    button.Font = Enum.Font.GothamSemibold
-    button.Parent = parent
-    applyRoundedCorners(button)
-
-    -- Hover effect
-    button.MouseEnter:Connect(function()
-        button.BackgroundColor3 = THEME.hover
-    end)
-    button.MouseLeave:Connect(function()
-        button.BackgroundColor3 = THEME.accent
-    end)
-
-    button.MouseButton1Click:Connect(callback)
-    return button
-end
-
-function AstroGUI.CreateSlider(parent, text, min, max, default, callback)
-    local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, 0, 0, 60)
-    container.BackgroundTransparency = 1
-    container.Parent = parent
-
-    local label = AstroGUI.CreateLabel(container, text)
-    label.Size = UDim2.new(1, -50, 0, 25)
-
-    local valueLabel = AstroGUI.CreateLabel(container, tostring(default))
-    valueLabel.Size = UDim2.new(0, 45, 0, 25)
-    valueLabel.Position = UDim2.new(1, -45, 0, 0)
-    valueLabel.TextXAlignment = Enum.TextXAlignment.Right
-
-    local sliderBar = Instance.new("Frame")
-    sliderBar.Size = UDim2.new(1, 0, 0, 6)
-    sliderBar.Position = UDim2.new(0, 0, 0, 35)
-    sliderBar.BackgroundColor3 = THEME.foreground
-    sliderBar.Parent = container
-    applyRoundedCorners(sliderBar, 3)
-
-    local sliderFill = Instance.new("Frame")
-    sliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
-    sliderFill.BackgroundColor3 = THEME.accent
-    sliderFill.Parent = sliderBar
-    applyRoundedCorners(sliderFill, 3)
-
-    local function updateSlider(input)
-        local pos = math.clamp((input.Position.X - sliderBar.AbsolutePosition.X) / sliderBar.AbsoluteSize.X, 0, 1)
-        local value = math.floor(min + pos * (max - min))
-        sliderFill.Size = UDim2.new(pos, 0, 1, 0)
-        valueLabel.Text = tostring(value)
-        callback(value)
+    if config then
+        for key, value in pairs(config) do
+            self.Config[key] = value
+        end
     end
-
-    -- Slider interaction
-    local isDragging = false
-    sliderBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            isDragging = true
-            updateSlider(input)
-        end
-    end)
-
-    game:GetService("UserInputService").InputChanged:Connect(function(input)
-        if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            updateSlider(input)
-        end
-    end)
-
-    game:GetService("UserInputService").InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            isDragging = false
-        end
-    end)
-
-    return container
+    
+    self.Windows = {}
+    self.ActiveWindow = nil
+    self.Theme = ModernUI.Themes[self.Config.Theme]
+    
+    if self.Config.SaveEnabled then
+        self:LoadSettings()
+    end
+    
+    -- Crear ScreenGui principal
+    self.GUI = CreateElement("ScreenGui", {
+        Name = "ModernUI",
+        Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui"),
+        ResetOnSpawn = false,
+        ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    })
+    
+    return self
 end
+-- Continuación del código anterior...
 
-function AstroGUI.CreateCheckbox(parent, text, default, callback)
-    local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, 0, 0, 30)
-    container.BackgroundTransparency = 1
-    container.Parent = parent
+-- Implementación de la ventana
+function ModernUI:CreateWindow(title)
+    local window = {
+        Tabs = {},
+        ActiveTab = nil,
+        Dragging = false,
+        Resizing = false
+    }
+    
+    -- Frame principal de la ventana
+    window.Frame = CreateElement("Frame", {
+        Name = title,
+        Size = UDim2.fromOffset(self.Config.WindowSize.X, self.Config.WindowSize.Y),
+        Position = UDim2.fromScale(0.5, 0.5),
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        BackgroundColor3 = self.Theme.Primary,
+        Parent = self.GUI
+    })
+    
+    ApplyRounding(window.Frame)
+    ApplyShadow(window.Frame)
+    
+    -- Barra de título
+    window.TitleBar = CreateElement("Frame", {
+        Name = "TitleBar",
+        Size = UDim2.new(1, 0, 0, 40),
+        BackgroundColor3 = self.Theme.Secondary,
+        Parent = window.Frame
+    })
+    
+    ApplyRounding(window.TitleBar)
+    
+    -- Título
+    window.Title = CreateElement("TextLabel", {
+        Name = "Title",
+        Size = UDim2.new(0.5, 0, 1, 0),
+        Position = UDim2.fromOffset(10, 0),
+        BackgroundTransparency = 1,
+        Text = title,
+        TextColor3 = self.Theme.Text,
+        TextSize = 16,
+        Font = Enum.Font.GothamBold,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Parent = window.TitleBar
+    })
+    
+    -- Botones de control de ventana
+    local buttonSize = 30
+    local buttonSpacing = 5
+    local buttonsContainer = CreateElement("Frame", {
+        Name = "WindowControls",
+        Size = UDim2.new(0, (buttonSize * 3) + (buttonSpacing * 2), 1, 0),
+        Position = UDim2.new(1, -((buttonSize * 3) + (buttonSpacing * 2) + 5), 0, 0),
+        BackgroundTransparency = 1,
+        Parent = window.TitleBar
+    })
+    
+    -- Botón minimizar
+    local minimizeButton = CreateElement("ImageButton", {
+        Name = "Minimize",
+        Size = UDim2.fromOffset(buttonSize, buttonSize),
+        Position = UDim2.new(0, 0, 0.5, -buttonSize/2),
+        BackgroundTransparency = 1,
+        Image = "rbxassetid://7072719338", -- Reemplazar con ID de ícono real
+        ImageColor3 = self.Theme.SubText,
+        Parent = buttonsContainer
+    })
+    
+    -- Botón maximizar
+    local maximizeButton = CreateElement("ImageButton", {
+        Name = "Maximize",
+        Size = UDim2.fromOffset(buttonSize, buttonSize),
+        Position = UDim2.new(0, buttonSize + buttonSpacing, 0.5, -buttonSize/2),
+        BackgroundTransparency = 1,
+        Image = "rbxassetid://7072719338", -- Reemplazar con ID de ícono real
+        ImageColor3 = self.Theme.SubText,
+        Parent = buttonsContainer
+    })
+    
+    -- Botón cerrar
+    local closeButton = CreateElement("ImageButton", {
+        Name = "Close",
+        Size = UDim2.fromOffset(buttonSize, buttonSize),
+        Position = UDim2.new(0, (buttonSize + buttonSpacing) * 2, 0.5, -buttonSize/2),
+        BackgroundTransparency = 1,
+        Image = "rbxassetid://7072725342", -- Reemplazar con ID de ícono real
+        ImageColor3 = self.Theme.Error,
+        Parent = buttonsContainer
+    })
+    
+    -- Contenedor de pestañas
+    window.TabContainer = CreateElement("Frame", {
+        Name = "TabContainer",
+        Size = UDim2.new(0, 200, 1, -40),
+        Position = UDim2.fromOffset(0, 40),
+        BackgroundColor3 = self.Theme.Secondary,
+        Parent = window.Frame
+    })
+    
+    -- Lista de pestañas
+    window.TabList = CreateElement("ScrollingFrame", {
+        Name = "TabList",
+        Size = UDim2.new(1, -10, 1, -10),
+        Position = UDim2.fromOffset(5, 5),
+        BackgroundTransparency = 1,
+        ScrollBarThickness = 2,
+        ScrollBarImageColor3 = self.Theme.Accent,
+        Parent = window.TabContainer
+    })
+    
+    -- Layout para pestañas
+    local tabListLayout = CreateElement("UIListLayout", {
+        Padding = UDim.new(0, self.Config.ElementPadding),
+        Parent = window.TabList
+    })
+    
+    -- Contenedor principal de contenido
+    window.ContentContainer = CreateElement("Frame", {
+        Name = "ContentContainer",
+        Size = UDim2.new(1, -210, 1, -50),
+        Position = UDim2.new(0, 205, 0, 45),
+        BackgroundTransparency = 1,
+        Parent = window.Frame
+    })
+    
+    -- Función para crear pestañas
+    function window:AddTab(name, icon)
+        local tab = {
+            Elements = {},
+            Visible = false
+        }
+        
+        -- Botón de la pestaña
+        tab.Button = CreateElement("TextButton", {
+            Name = name,
+            Size = UDim2.new(1, 0, 0, 40),
+            BackgroundColor3 = self.ActiveTab == nil and ModernUI.Theme.Accent or ModernUI.Theme.Secondary,
+            Parent = window.TabList
+        })
+        
+        ApplyRounding(tab.Button)
+        
+        -- Icono (si se proporciona)
+        if icon then
+            tab.Icon = CreateElement("ImageLabel", {
+                Size = UDim2.fromOffset(20, 20),
+                Position = UDim2.new(0, 10, 0.5, -10),
+                BackgroundTransparency = 1,
+                Image = icon,
+                ImageColor3 = self.Theme.Text,
+                Parent = tab.Button
+            })
+        end
+        
+        -- Etiqueta de la pestaña
+        tab.Label = CreateElement("TextLabel", {
+            Size = UDim2.new(1, icon and -40 or -20, 1, 0),
+            Position = UDim2.new(0, icon and 40 or 10, 0, 0),
+            BackgroundTransparency = 1,
+            Text = name,
+            TextColor3 = self.Theme.Text,
+            TextSize = self.Config.DefaultTextSize,
+            Font = self.Config.DefaultFont,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = tab.Button
+        })
+        
+         -- Contenedor de elementos de la pestaña
+         tab.Container = CreateElement("ScrollingFrame", {
+            Size = UDim2.fromScale(1, 1),
+            BackgroundTransparency = 1,
+            ScrollBarThickness = 2,
+            ScrollBarImageColor3 = self.Theme.Accent,
+            Visible = self.ActiveTab == nil,
+            Parent = window.ContentContainer
+        })
+        
+        -- Layout para elementos
+        local elementLayout = CreateElement("UIListLayout", {
+            Padding = UDim.new(0, self.Config.ElementPadding),
+            Parent = tab.Container
+        })
+        -- ... (código anterior se mantiene igual) ...
 
-    local checkbox = Instance.new("Frame")
-    checkbox.Size = UDim2.new(0, 20, 0, 20)
-    checkbox.Position = UDim2.new(0, 0, 0, 5)
-    checkbox.BackgroundColor3 = THEME.foreground
-    checkbox.Parent = container
-    applyRoundedCorners(checkbox, 4)
-
-    local checkmark = Instance.new("ImageLabel")
-    checkmark.Size = UDim2.new(0.8, 0, 0.8, 0)
-    checkmark.Position = UDim2.new(0.1, 0, 0.1, 0)
-    checkmark.BackgroundTransparency = 1
-    checkmark.Image = "rbxassetid://5228254295" -- Replace with appropriate checkmark asset
-    checkmark.ImageColor3 = THEME.success
-    checkmark.ImageTransparency = default and 0 or 1
-    checkmark.Parent = checkbox
-
-    local label = AstroGUI.CreateLabel(container, text)
-    label.Position = UDim2.new(0, 30, 0, 0)
-    label.Size = UDim2.new(1, -30, 1, 0)
-
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, 0, 1, 0)
-    button.BackgroundTransparency = 1
-    button.Text = ""
-    button.Parent = container
-
-    local checked = default
-    button.MouseButton1Click:Connect(function()
-        checked = not checked
-        checkmark.ImageTransparency = checked and 0 or 1
-        callback(checked)
-    end)
-
-    return container
-end
-
-function AstroGUI.CreateDropdown(parent, text, options, default, callback)
-    local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, 0, 0, 65)
-    container.BackgroundTransparency = 1
-    container.Parent = parent
-
-    local label = AstroGUI.CreateLabel(container, text)
-
-    local dropdown = Instance.new("TextButton")
-    dropdown.Size = UDim2.new(1, 0, 0, 35)
-    dropdown.Position = UDim2.new(0, 0, 0, 30)
-    dropdown.BackgroundColor3 = THEME.foreground
-    dropdown.Text = default or options[1]
-    dropdown.TextColor3 = THEME.text
-    dropdown.TextSize = 14
-    dropdown.Font = Enum.Font.Gotham
-    dropdown.Parent = container
-    applyRoundedCorners(dropdown)
-
-    local optionsFrame = Instance.new("Frame")
-    optionsFrame.Size = UDim2.new(1, 0, 0, #options * 35)
-    optionsFrame.Position = UDim2.new(0, 0, 1, 5)
-    optionsFrame.BackgroundColor3 = THEME.foreground
-    optionsFrame.Visible = false
-    optionsFrame.ZIndex = 10
-    optionsFrame.Parent = dropdown
-    applyRoundedCorners(optionsFrame)
-
-    for i, option in ipairs(options) do
-        local optionButton = Instance.new("TextButton")
-        optionButton.Size = UDim2.new(1, 0, 0, 35)
-        optionButton.Position = UDim2.new(0, 0, 0, (i-1) * 35)
-        optionButton.BackgroundTransparency = 1
-        optionButton.Text = option
-        optionButton.TextColor3 = THEME.text
-        optionButton.TextSize = 14
-        optionButton.Font = Enum.Font.Gotham
-        optionButton.ZIndex = 10
-        optionButton.Parent = optionsFrame
-
-        optionButton.MouseButton1Click:Connect(function()
-            dropdown.Text = option
-            optionsFrame.Visible = false
-            callback(option)
+-- Implementación de controles
+local function AddControls(tab)
+    -- Botón
+    function tab:AddButton(text, callback)
+        local button = CreateElement("TextButton", {
+            Size = UDim2.new(1, -20, 0, 40),
+            BackgroundColor3 = self.Theme.Secondary,
+            Parent = tab.Container
+        })
+        
+        ApplyRounding(button)
+        ApplyShadow(button, 0.8)
+        
+        local label = CreateElement("TextLabel", {
+            Size = UDim2.fromScale(1, 1),
+            BackgroundTransparency = 1,
+            Text = text,
+            TextColor3 = self.Theme.Text,
+            TextSize = self.Config.DefaultTextSize,
+            Font = self.Config.DefaultFont,
+            Parent = button
+        })
+        
+        -- Efectos de hover
+        button.MouseEnter:Connect(function()
+            CreateTween(button, {BackgroundColor3 = self.Theme.Hover}):Play()
         end)
+        
+        button.MouseLeave:Connect(function()
+            CreateTween(button, {BackgroundColor3 = self.Theme.Secondary}):Play()
+        end)
+        
+        button.MouseButton1Click:Connect(callback)
+        return button
     end
+    
+    -- Slider
+    function tab:AddSlider(text, min, max, default, callback)
+        local slider = {Value = default or min}
+        
+        local container = CreateElement("Frame", {
+            Size = UDim2.new(1, -20, 0, 60),
+            BackgroundColor3 = self.Theme.Secondary,
+            Parent = tab.Container
+        })
+        
+        ApplyRounding(container)
+        
+        local label = CreateElement("TextLabel", {
+            Size = UDim2.new(1, -100, 0, 30),
+            Position = UDim2.fromOffset(10, 5),
+            BackgroundTransparency = 1,
+            Text = text,
+            TextColor3 = self.Theme.Text,
+            TextSize = self.Config.DefaultTextSize,
+            Font = self.Config.DefaultFont,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = container
+        })
+        
+        local valueLabel = CreateElement("TextLabel", {
+            Size = UDim2.new(0, 80, 0, 30),
+            Position = UDim2.new(1, -90, 0, 5),
+            BackgroundTransparency = 1,
+            Text = tostring(slider.Value),
+            TextColor3 = self.Theme.SubText,
+            TextSize = self.Config.DefaultTextSize,
+            Font = self.Config.DefaultFont,
+            Parent = container
+        })
+        
+        local sliderBar = CreateElement("Frame", {
+            Size = UDim2.new(1, -20, 0, 6),
+            Position = UDim2.new(0, 10, 0, 40),
+            BackgroundColor3 = self.Theme.Primary,
+            Parent = container
+        })
+        
+        ApplyRounding(sliderBar)
+        
+        local fill = CreateElement("Frame", {
+            Size = UDim2.fromScale((slider.Value - min)/(max - min), 1),
+            BackgroundColor3 = self.Theme.Accent,
+            Parent = sliderBar
+        })
+        
+        ApplyRounding(fill)
+        
+        local function updateSlider(input)
+            local pos = math.clamp((input.Position.X - sliderBar.AbsolutePosition.X) / sliderBar.AbsoluteSize.X, 0, 1)
+            local value = math.floor(min + (max - min) * pos)
+            slider.Value = value
+            valueLabel.Text = tostring(value)
+            fill.Size = UDim2.fromScale(pos, 1)
+            callback(value)
+        end
+        
+        local dragging = false
+        
+        sliderBar.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = true
+                updateSlider(input)
+            end
+        end)
+        
+        UserInputService.InputChanged:Connect(function(input)
+            if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                updateSlider(input)
+            end
+        end)
+        
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = false
+            end
+        end)
+        
+        return slider
+    end
+    
+    -- Toggle
+    function tab:AddToggle(text, default, callback)
+        local toggle = {Value = default or false}
+        
+        local container = CreateElement("Frame", {
+            Size = UDim2.new(1, -20, 0, 40),
+            BackgroundColor3 = self.Theme.Secondary,
+            Parent = tab.Container
+        })
+        
+        ApplyRounding(container)
+        
+        local label = CreateElement("TextLabel", {
+            Size = UDim2.new(1, -60, 1, 0),
+            Position = UDim2.fromOffset(10, 0),
+            BackgroundTransparency = 1,
+            Text = text,
+            TextColor3 = self.Theme.Text,
+            TextSize = self.Config.DefaultTextSize,
+            Font = self.Config.DefaultFont,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = container
+        })
+        
+        local toggleButton = CreateElement("Frame", {
+            Size = UDim2.fromOffset(40, 22),
+            Position = UDim2.new(1, -50, 0.5, -11),
+            BackgroundColor3 = toggle.Value and self.Theme.Accent or self.Theme.Primary,
+            Parent = container
+        })
+        
+        ApplyRounding(toggleButton, 11)
+        
+        local circle = CreateElement("Frame", {
+            Size = UDim2.fromOffset(18, 18),
+            Position = UDim2.new(toggle.Value and 1 or 0, toggle.Value and -20 or 2, 0.5, -9),
+            BackgroundColor3 = self.Theme.Text,
+            Parent = toggleButton
+        })
+        
+        ApplyRounding(circle, 9)
+        
+        local function updateToggle()
+            toggle.Value = not toggle.Value
+            CreateTween(circle, {Position = UDim2.new(toggle.Value and 1 or 0, toggle.Value and -20 or 2, 0.5, -9)}):Play()
+            CreateTween(toggleButton, {BackgroundColor3 = toggle.Value and self.Theme.Accent or self.Theme.Primary}):Play()
+            callback(toggle.Value)
+        end
+        
+        toggleButton.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                updateToggle()
+            end
+        end)
+        
+        return toggle
+    end
+    
+    -- Dropdown
+    function tab:AddDropdown(text, options, default, callback)
+        local dropdown = {
+            Value = default or options[1],
+            Open = false
+        }
+        
+        local container = CreateElement("Frame", {
+            Size = UDim2.new(1, -20, 0, 40),
+            BackgroundColor3 = self.Theme.Secondary,
+            Parent = tab.Container
+        })
+        
+        ApplyRounding(container)
+        
+        local label = CreateElement("TextLabel", {
+            Size = UDim2.new(1, -10, 0, 40),
+            Position = UDim2.fromOffset(10, 0),
+            BackgroundTransparency = 1,
+            Text = text,
+            TextColor3 = self.Theme.Text,
+            TextSize = self.Config.DefaultTextSize,
+            Font = self.Config.DefaultFont,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = container
+        })
+        
+        local selectedLabel = CreateElement("TextLabel", {
+            Size = UDim2.new(0, 200, 0, 40),
+            Position = UDim2.new(1, -210, 0, 0),
+            BackgroundTransparency = 1,
+            Text = dropdown.Value,
+            TextColor3 = self.Theme.SubText,
+            TextSize = self.Config.DefaultTextSize,
+            Font = self.Config.DefaultFont,
+            Parent = container
+        })
+        
+        local optionsContainer = CreateElement("Frame", {
+            Size = UDim2.new(1, 0, 0, #options * 30),
+            Position = UDim2.new(0, 0, 1, 5),
+            BackgroundColor3 = self.Theme.Secondary,
+            Visible = false,
+            Parent = container
+        })
+        
+        ApplyRounding(optionsContainer)
+        
+        for i, option in ipairs(options) do
+            local optionButton = CreateElement("TextButton", {
+                Size = UDim2.new(1, -10, 0, 30),
+                Position = UDim2.new(0, 5, 0, (i-1) * 30),
+                BackgroundTransparency = 1,
+                Text = option,
+                TextColor3 = self.Theme.Text,
+                TextSize = self.Config.DefaultTextSize,
+                Font = self.Config.DefaultFont,
+                Parent = optionsContainer
+            })
+            
+            optionButton.MouseButton1Click:Connect(function()
+                dropdown.Value = option
+                selectedLabel.Text = option
+                dropdown.Open = false
+                optionsContainer.Visible = false
+                callback(option)
+            end)
+        end
+        
+        container.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dropdown.Open = not dropdown.Open
+                optionsContainer.Visible = dropdown.Open
+            end
+        end)
+        
+        return dropdown
+    end
+    
+    -- ColorPicker
+    function tab:AddColorPicker(text, default, callback)
+        local colorPicker = {
+            Color = default or Color3.fromRGB(255, 255, 255)
+        }
+        
+        local container = CreateElement("Frame", {
+            Size = UDim2.new(1, -20, 0, 40),
+            BackgroundColor3 = self.Theme.Secondary,
+            Parent = tab.Container
+        })
+        
+        ApplyRounding(container)
+        
+        local label = CreateElement("TextLabel", {
+            Size = UDim2.new(1, -60, 1, 0),
+            Position = UDim2.fromOffset(10, 0),
+            BackgroundTransparency = 1,
+            Text = text,
+            TextColor3 = self.Theme.Text,
+            TextSize = self.Config.DefaultTextSize,
+            Font = self.Config.DefaultFont,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = container
+        })
+        
+        local preview = CreateElement("Frame", {
+            Size = UDim2.fromOffset(30, 30),
+            Position = UDim2.new(1, -40, 0.5, -15),
+            BackgroundColor3 = colorPicker.Color,
+            Parent = container
+        })
+        
+        ApplyRounding(preview)
+        
+        -- Implementar popup de selector de color aquí
+        
+        return colorPicker
+    end
+    
+    -- TextBox
+    function tab:AddTextBox(text, placeholder, callback)
+        local textBox = CreateElement("Frame", {
+            Size = UDim2.new(1, -20, 0, 40),
+            BackgroundColor3 = self.Theme.Secondary,
+            Parent = tab.Container
+        })
+        
+        ApplyRounding(textBox)
+        
+        local input = CreateElement("TextBox", {
+            Size = UDim2.new(1, -20, 1, -10),
+            Position = UDim2.fromOffset(10, 5),
+            BackgroundTransparency = 1,
+            Text = "",
+            PlaceholderText = placeholder,
+            TextColor3 = self.Theme.Text,
+            PlaceholderColor3 = self.Theme.SubText,
+            TextSize = self.Config.DefaultTextSize,
+            Font = self.Config.DefaultFont,
+            Parent = textBox
+        })
+        
+        input.FocusLost:Connect(function(enterPressed)
+            if enterPressed then
+                callback(input.Text)
+            end
+        end)
+        
+        return textBox
+    end
+end
 
-    dropdown.MouseButton1Click:Connect(function()
-        optionsFrame.Visible = not optionsFrame.Visible
+-- Métodos de guardado/carga
+function ModernUI:SaveSettings()
+    if not self.Config.SaveEnabled then return end
+    
+    local data = {
+        Theme = self.Config.Theme,
+        Windows = {}
+    }
+    
+    for name, window in pairs(self.Windows) do
+        data.Windows[name] = {
+            Position = {
+                X = window.Frame.Position.X.Scale,
+                Y = window.Frame.Position.Y.Scale
+            },
+            Size = {
+                X = window.Frame.Size.X.Offset,
+                Y = window.Frame.Size.Y.Offset
+            }
+        }
+    end
+    
+    local success, _ = pcall(function()
+        writefile(SAVE_FILE_NAME, HttpService:JSONEncode(data))
     end)
-
-    return container
 end
 
-function AstroGUI.CreateProgressBar(parent, text)
-    local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, 0, 0, 50)
-    container.BackgroundTransparency = 1
-    container.Parent = parent
-
-    local label = AstroGUI.CreateLabel(container, text)
-
-    local progressBar = Instance.new("Frame")
-    progressBar.Size = UDim2.new(1, 0, 0, 10)
-    progressBar.Position = UDim2.new(0, 0, 0, 30)
-    progressBar.BackgroundColor3 = THEME.foreground
-    progressBar.Parent = container
-    applyRoundedCorners(progressBar, 5)
-
-    local fill = Instance.new("Frame")
-    fill.Size = UDim2.new(0, 0, 1, 0)
-    fill.BackgroundColor3 = THEME.accent
-    fill.Parent = progressBar
-    applyRoundedCorners(fill, 5)
-
-    local function updateProgress(value)
-        fill.Size = UDim2.new(math.clamp(value, 0, 1), 0, 1, 0)
+function ModernUI:LoadSettings()
+    if not self.Config.SaveEnabled then return end
+    
+    local success, data = pcall(function()
+        if isfile(SAVE_FILE_NAME) then
+            return HttpService:JSONDecode(readfile(SAVE_FILE_NAME))
+        end
+    end)
+    
+    if success and data then
+        self.Config.Theme = data.Theme
+        self.Theme = self.Themes[data.Theme]
+        self.SavedWindowData = data.Windows
     end
-
-    return container, updateProgress
 end
 
-return AstroGUI
+return ModernUI
