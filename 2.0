@@ -1,0 +1,577 @@
+local Library = {}
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+- Utility functions for gradients and effects
+local function CreateGradient(parent, colorSequence, rotation)
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = colorSequence
+    gradient.Rotation = rotation or 0
+    gradient.Parent = parent
+    return gradient
+end
+
+local function CreateStroke(parent, thickness, color)
+    local stroke = Instance.new("UIStroke")
+    stroke.Thickness = thickness
+    stroke.Color = color
+    stroke.Parent = parent
+    return stroke
+end
+function Library:CreateWindow(name)
+
+    local MainUI = Instance.new("ScreenGui")
+    local MainFrame = Instance.new("Frame")
+    local SideBar = Instance.new("Frame")
+    local ContentArea = Instance.new("Frame")
+    local BackgroundParticles = Instance.new("Frame")
+    
+    MainUI.Name = "LibraryUI"
+    MainUI.Parent = CoreGui
+    MainUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    
+    -- Enhanced MainFrame with gradient
+    MainFrame.Name = "MainFrame"
+    MainFrame.Parent = MainUI
+    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    MainFrame.Position = UDim2.new(0.5, -400, 0.5, -300)
+    MainFrame.Size = UDim2.new(0, 800, 0, 600)
+    MainFrame.ClipsDescendants = true
+    
+    local MainCorner = Instance.new("UICorner")
+    MainCorner.CornerRadius = UDim.new(0, 12)
+    MainCorner.Parent = MainFrame
+    
+    -- Gradient background
+    local mainGradient = CreateGradient(MainFrame, ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 45)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 30))
+    }), 45)
+    
+    -- Enhanced shadow
+    local Shadow = Instance.new("ImageLabel")
+    Shadow.Name = "Shadow"
+    Shadow.Parent = MainFrame
+    Shadow.BackgroundTransparency = 1
+    Shadow.Position = UDim2.new(0, -15, 0, -15)
+    Shadow.Size = UDim2.new(1, 30, 1, 30)
+    Shadow.Image = "rbxassetid://5028857084"
+    Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+    Shadow.ImageTransparency = 0.2
+    Shadow.ScaleType = Enum.ScaleType.Slice
+    Shadow.SliceCenter = Rect.new(24, 24, 276, 276)
+    
+    -- Enhanced SideBar with glass effect
+    SideBar.Name = "SideBar"
+    SideBar.Parent = MainFrame
+    SideBar.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+    SideBar.BackgroundTransparency = 0.1
+    SideBar.Size = UDim2.new(0, 200, 1, 0)
+    
+    local SideBarCorner = Instance.new("UICorner")
+    SideBarCorner.CornerRadius = UDim.new(0, 12)
+    SideBarCorner.Parent = SideBar
+    
+    local sideBarGradient = CreateGradient(SideBar, ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 35)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 25))
+    }))
+    
+    -- Animated logo/brand
+    local BrandFrame = Instance.new("Frame")
+    BrandFrame.Name = "BrandFrame"
+    BrandFrame.Parent = SideBar
+    BrandFrame.BackgroundTransparency = 1
+    BrandFrame.Position = UDim2.new(0, 0, 0, 0)
+    BrandFrame.Size = UDim2.new(1, 0, 0, 60)
+    
+    local LogoContainer = Instance.new("Frame")
+    LogoContainer.Name = "LogoContainer"
+    LogoContainer.Parent = BrandFrame
+    LogoContainer.BackgroundTransparency = 1
+    LogoContainer.Position = UDim2.new(0, 15, 0, 15)
+    LogoContainer.Size = UDim2.new(0, 30, 0, 30)
+    
+    -- Create animated logo
+    local logoPoints = {}
+    for i = 1, 8 do
+        local point = Instance.new("Frame")
+        point.Size = UDim2.new(0, 4, 0, 4)
+        point.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        point.Position = UDim2.new(0.5, -2, 0.5, -2)
+        point.Parent = LogoContainer
+        
+        local pointCorner = Instance.new("UICorner")
+        pointCorner.CornerRadius = UDim.new(1, 0)
+        pointCorner.Parent = point
+        
+        table.insert(logoPoints, point)
+    end
+    
+    -- Animate logo points
+    spawn(function()
+        local angle = 0
+        while true do
+            for i, point in ipairs(logoPoints) do
+                local offset = (i - 1) * (math.pi / 4)
+                local radius = 12
+                local x = math.cos(angle + offset) * radius
+                local y = math.sin(angle + offset) * radius
+                point.Position = UDim2.new(0.5, x - 2, 0.5, y - 2)
+            end
+            angle = angle + 0.02
+            RunService.RenderStepped:Wait()
+        end
+    end)
+    
+    -- Enhanced title with glow
+    local Title = Instance.new("TextLabel")
+    Title.Name = "Title"
+    Title.Parent = BrandFrame
+    Title.BackgroundTransparency = 1
+    Title.Position = UDim2.new(0, 55, 0, 15)
+    Title.Size = UDim2.new(1, -70, 0, 30)
+    Title.Font = Enum.Font.GothamBold
+    Title.Text = name
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 22
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    
+    -- Title glow effect
+    local TitleGlow = Instance.new("ImageLabel")
+    TitleGlow.Name = "TitleGlow"
+    TitleGlow.Parent = Title
+    TitleGlow.BackgroundTransparency = 1
+    TitleGlow.Position = UDim2.new(0, -10, 0, -10)
+    TitleGlow.Size = UDim2.new(1, 20, 1, 20)
+    TitleGlow.Image = "rbxassetid://5028857084"
+    TitleGlow.ImageColor3 = Color3.fromRGB(255, 255, 255)
+    TitleGlow.ImageTransparency = 0.8
+    
+    -- Sidebar list container
+    local SideBarList = Instance.new("Frame")
+    SideBarList.Name = "SideBarList"
+    SideBarList.Parent = SideBar
+    SideBarList.BackgroundTransparency = 1
+    SideBarList.Position = UDim2.new(0, 0, 0, 70)
+    SideBarList.Size = UDim2.new(1, 0, 1, -70)
+    
+    local SideBarLayout = Instance.new("UIListLayout")
+    SideBarLayout.Parent = SideBarList
+    SideBarLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    SideBarLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    SideBarLayout.Padding = UDim.new(0, 8)
+    
+    -- Enhanced content area
+    ContentArea.Name = "ContentArea"
+    ContentArea.Parent = MainFrame
+    ContentArea.BackgroundTransparency = 1
+    ContentArea.Position = UDim2.new(0, 210, 0, 60)
+    ContentArea.Size = UDim2.new(1, -220, 1, -70)
+    
+    local SearchBar = Instance.new("TextBox")
+    SearchBar.Parent = SearchContainer
+    SearchBar.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+    SearchBar.BackgroundTransparency = 0.2
+    SearchBar.Size = UDim2.new(1, -20, 1, 0)
+    SearchBar.Position = UDim2.new(0, 10, 0, 0)
+    SearchBar.Font = Enum.Font.GothamSemibold
+    SearchBar.PlaceholderText = "Search..."
+    SearchBar.PlaceholderColor3 = Color3.fromRGB(200, 200, 200)
+    SearchBar.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SearchBar.TextSize = 14
+    SearchBar.ClearTextOnFocus = false
+    SearchBar.Text = ""
+    
+    -- Search functionality
+    local function updateSearch()
+        local searchText = string.lower(SearchBar.Text)
+        
+        -- Search through all tabs and their elements
+        for _, tabButton in pairs(SideBarList:GetChildren()) do
+            if tabButton:IsA("TextButton") then
+                local tabName = string.lower(tabButton.Text:gsub("    ", "")) -- Remove padding for icon
+                local tabContent = ContentArea:FindFirstChild(tabButton.Name:gsub("Tab", "Content"))
+                
+                if tabContent then
+                    local foundInTab = false
+                    
+                    -- Search through elements in the tab
+                    for _, element in pairs(tabContent:GetChildren()) do
+                        if element:IsA("Frame") or element:IsA("TextButton") then
+                            local elementText = ""
+                            
+                            -- Get text from different element types
+                            if element:IsA("TextButton") then
+                                elementText = string.lower(element.Text)
+                            elseif element:FindFirstChild("SliderText") then
+                                elementText = string.lower(element.SliderText.Text)
+                            elseif element:FindFirstChild("ToggleButton") then
+                                elementText = string.lower(element.ToggleButton.Text)
+                            end
+                            
+                            local visible = searchText == "" or string.find(elementText, searchText)
+                            element.Visible = visible
+                            
+                            if visible then
+                                foundInTab = true
+                            end
+                        end
+                    end
+                    
+                    -- Show/hide tab button based on whether any elements match
+                    tabButton.Visible = searchText == "" or string.find(tabName, searchText) or foundInTab
+                end
+            end
+        end
+    end
+    
+    SearchBar:GetPropertyChangedSignal("Text"):Connect(updateSearch)
+    
+    -- Animated background particles
+    BackgroundParticles.Name = "BackgroundParticles"
+    BackgroundParticles.Parent = MainFrame
+    BackgroundParticles.BackgroundTransparency = 1
+    BackgroundParticles.Size = UDim2.new(1, 0, 1, 0)
+    BackgroundParticles.ClipsDescendants = true
+    
+    -- Create animated particles
+    for i = 1, 50 do
+        local particle = Instance.new("Frame")
+        particle.Parent = BackgroundParticles
+        particle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        particle.BackgroundTransparency = 0.9
+        particle.Size = UDim2.new(0, math.random(2, 4), 0, math.random(2, 4))
+        particle.Position = UDim2.new(math.random(), 0, math.random(), 0)
+        
+        local particleCorner = Instance.new("UICorner")
+        particleCorner.CornerRadius = UDim.new(1, 0)
+        particleCorner.Parent = particle
+        
+        -- Particle animation
+        spawn(function()
+            while true do
+                local randomDuration = math.random(3, 6)
+                local tween = TweenService:Create(particle, TweenInfo.new(
+                    randomDuration,
+                    Enum.EasingStyle.Linear,
+                    Enum.EasingDirection.Out,
+                    -1
+                ), {
+                    Position = UDim2.new(math.random(), 0, math.random(), 0),
+                    BackgroundTransparency = math.random(0.8, 0.95),
+                    Rotation = math.random(-180, 180)
+                })
+                tween:Play()
+                wait(randomDuration)
+            end
+        end)
+    end
+    
+    -- Tab system
+    local TabLibrary = {}
+    
+    function TabLibrary:CreateTab(name, icon)
+            function TabLibrary:CreateTab(name, icon)
+        local TabButton = Instance.new("TextButton")
+        local TabContent = Instance.new("Frame")
+        local TabLayout = Instance.new("UIListLayout")
+        local TabPadding = Instance.new("UIPadding")
+        
+        TabButton.Name = name.."Tab"
+        TabButton.Parent = SideBarList
+        TabButton.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+        TabButton.BackgroundTransparency = 0.2
+        TabButton.Size = UDim2.new(0.9, 0, 0, 45)
+        TabButton.Font = Enum.Font.GothamSemibold
+        TabButton.Text = name
+        TabButton.TextColor3 = Color3.fromRGB(200, 200, 255)
+        TabButton.TextSize = 14
+        TabButton.AutoButtonColor = false
+        
+        local tabButtonGradient = CreateGradient(TabButton, ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 60)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 30, 45))
+        }))
+        
+        CreateStroke(TabButton, 1.5, Color3.fromRGB(60, 60, 90))
+        
+        local TabButtonCorner = Instance.new("UICorner")
+        TabButtonCorner.CornerRadius = UDim.new(0, 8)
+        TabButtonCorner.Parent = TabButton
+
+-- Add icon if provided
+if icon then
+    local Icon = Instance.new("ImageLabel")
+    Icon.Parent = TabButton
+    Icon.BackgroundTransparency = 1
+    Icon.Position = UDim2.new(0, 10, 0.5, -10)
+    Icon.Size = UDim2.new(0, 20, 0, 20)
+    Icon.Image = icon
+    Icon.ImageColor3 = Color3.fromRGB(200, 200, 255)
+    TabButton.Text = "    " .. name  -- Add padding for icon
+end
+
+TabContent.Name = name.."Content"
+TabContent.Parent = ContentArea
+TabContent.BackgroundTransparency = 1
+TabContent.Size = UDim2.new(1, 0, 1, 0)
+TabContent.Visible = false
+
+TabLayout.Parent = TabContent
+TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+TabLayout.Padding = UDim.new(0, 10)
+
+TabPadding.Parent = TabContent
+TabPadding.PaddingLeft = UDim.new(0, 10)
+TabPadding.PaddingRight = UDim.new(0, 10)
+TabPadding.PaddingTop = UDim.new(0, 10)
+
+-- Tab selection logic
+TabButton.MouseButton1Click:Connect(function()
+    for _, child in pairs(ContentArea:GetChildren()) do
+        if child:IsA("Frame") then
+            child.Visible = false
+        end
+    end
+    TabContent.Visible = true
+    
+    -- Reset all tab buttons
+    for _, button in pairs(SideBarList:GetChildren()) do
+        if button:IsA("TextButton") then
+            TweenService:Create(button, TweenInfo.new(0.3), {
+                BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+            }):Play()
+        end
+    end
+    
+    -- Animate selected tab
+    TweenService:Create(TabButton, TweenInfo.new(0.3), {
+        BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+    }):Play()
+end)
+
+-- Element Library
+local ElementLibrary = {}
+
+function ElementLibrary:CreateButton(text, callback)
+    local Button = Instance.new("TextButton")
+    Button.Name = text.."Button"
+    Button.Parent = TabContent
+    Button.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+    Button.Size = UDim2.new(1, 0, 0, 40)
+    Button.Font = Enum.Font.GothamSemibold
+    Button.Text = text
+    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Button.TextSize = 14
+    Button.AutoButtonColor = false
+    
+    local ButtonCorner = Instance.new("UICorner")
+    ButtonCorner.CornerRadius = UDim.new(0, 8)
+    ButtonCorner.Parent = Button
+    
+    CreateStroke(Button, 1.5, Color3.fromRGB(60, 60, 90))
+    
+    -- Button animations
+    Button.MouseEnter:Connect(function()
+        TweenService:Create(Button, TweenInfo.new(0.3), {
+            BackgroundColor3 = Color3.fromRGB(45, 45, 65)
+        }):Play()
+    end)
+    
+    Button.MouseLeave:Connect(function()
+        TweenService:Create(Button, TweenInfo.new(0.3), {
+            BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+        }):Play()
+    end)
+    
+    Button.MouseButton1Click:Connect(function()
+        -- Ripple effect
+        local Ripple = Instance.new("Frame")
+        Ripple.Parent = Button
+        Ripple.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        Ripple.BackgroundTransparency = 0.6
+        Ripple.Position = UDim2.new(0, mouse.X - Button.AbsolutePosition.X, 0, mouse.Y - Button.AbsolutePosition.Y)
+        Ripple.Size = UDim2.new(0, 0, 0, 0)
+        
+        local RippleCorner = Instance.new("UICorner")
+        RippleCorner.CornerRadius = UDim.new(1, 0)
+        RippleCorner.Parent = Ripple
+        
+        TweenService:Create(Ripple, TweenInfo.new(0.5), {
+            Size = UDim2.new(0, 500, 0, 500),
+            Position = UDim2.new(0.5, -250, 0.5, -250),
+            BackgroundTransparency = 1
+        }):Play()
+        
+        game.Debris:AddItem(Ripple, 0.5)
+        callback()
+    end)
+    
+    return Button
+end
+
+function ElementLibrary:CreateToggle(text, default, callback)
+    local ToggleFrame = Instance.new("Frame")
+    local ToggleButton = Instance.new("TextButton")
+    local ToggleIndicator = Instance.new("Frame")
+    local Enabled = default or false
+    
+    ToggleFrame.Name = text.."Toggle"
+    ToggleFrame.Parent = TabContent
+    ToggleFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+    ToggleFrame.Size = UDim2.new(1, 0, 0, 40)
+    
+    local ToggleCorner = Instance.new("UICorner")
+    ToggleCorner.CornerRadius = UDim.new(0, 8)
+    ToggleCorner.Parent = ToggleFrame
+    
+    CreateStroke(ToggleFrame, 1.5, Color3.fromRGB(60, 60, 90))
+    
+    ToggleButton.Name = "ToggleButton"
+    ToggleButton.Parent = ToggleFrame
+    ToggleButton.BackgroundTransparency = 1
+    ToggleButton.Size = UDim2.new(1, 0, 1, 0)
+    ToggleButton.Font = Enum.Font.GothamSemibold
+    ToggleButton.Text = text
+    ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleButton.TextSize = 14
+    
+    ToggleIndicator.Name = "Indicator"
+    ToggleIndicator.Parent = ToggleFrame
+    ToggleIndicator.BackgroundColor3 = Enabled and Color3.fromRGB(0, 255, 128) or Color3.fromRGB(255, 64, 64)
+    ToggleIndicator.Position = UDim2.new(0.9, -20, 0.5, -10)
+    ToggleIndicator.Size = UDim2.new(0, 20, 0, 20)
+    
+    local IndicatorCorner = Instance.new("UICorner")
+    IndicatorCorner.CornerRadius = UDim.new(1, 0)
+    IndicatorCorner.Parent = ToggleIndicator
+    
+    ToggleButton.MouseButton1Click:Connect(function()
+        Enabled = not Enabled
+        TweenService:Create(ToggleIndicator, TweenInfo.new(0.3), {
+            BackgroundColor3 = Enabled and Color3.fromRGB(0, 255, 128) or Color3.fromRGB(255, 64, 64)
+        }):Play()
+        callback(Enabled)
+    end)
+    
+    return ToggleFrame
+end
+
+function ElementLibrary:CreateSlider(text, min, max, default, callback)
+    local SliderFrame = Instance.new("Frame")
+    local SliderText = Instance.new("TextLabel")
+    local SliderValue = Instance.new("TextLabel")
+    local SliderBackground = Instance.new("Frame")
+    local SliderFill = Instance.new("Frame")
+    local SliderButton = Instance.new("TextButton")
+    
+    SliderFrame.Name = text.."Slider"
+    SliderFrame.Parent = TabContent
+    SliderFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+    SliderFrame.Size = UDim2.new(1, 0, 0, 60)
+    
+    local SliderCorner = Instance.new("UICorner")
+    SliderCorner.CornerRadius = UDim.new(0, 8)
+    SliderCorner.Parent = SliderFrame
+    
+    CreateStroke(SliderFrame, 1.5, Color3.fromRGB(60, 60, 90))
+    
+    SliderText.Name = "SliderText"
+    SliderText.Parent = SliderFrame
+    SliderText.BackgroundTransparency = 1
+    SliderText.Position = UDim2.new(0, 10, 0, 5)
+    SliderText.Size = UDim2.new(1, -20, 0, 20)
+    SliderText.Font = Enum.Font.GothamSemibold
+    SliderText.Text = text
+    SliderText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SliderText.TextSize = 14
+    SliderText.TextXAlignment = Enum.TextXAlignment.Left
+    
+    SliderValue.Name = "SliderValue"
+    SliderValue.Parent = SliderFrame
+    SliderValue.BackgroundTransparency = 1
+    SliderValue.Position = UDim2.new(0.9, -40, 0, 5)
+    SliderValue.Size = UDim2.new(0, 40, 0, 20)
+    SliderValue.Font = Enum.Font.GothamSemibold
+    SliderValue.Text = tostring(default)
+    SliderValue.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SliderValue.TextSize = 14
+    
+    SliderBackground.Name = "SliderBackground"
+    SliderBackground.Parent = SliderFrame
+    SliderBackground.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    SliderBackground.Position = UDim2.new(0, 10, 0, 35)
+    SliderBackground.Size = UDim2.new(1, -20, 0, 5)
+    
+    local BackgroundCorner = Instance.new("UICorner")
+    BackgroundCorner.CornerRadius = UDim.new(1, 0)
+    BackgroundCorner.Parent = SliderBackground
+    
+    SliderFill.Name = "SliderFill"
+    SliderFill.Parent = SliderBackground
+    SliderFill.BackgroundColor3 = Color3.fromRGB(0, 128, 255)
+    SliderFill.Size = UDim2.new((default - min)/(max - min), 0, 1, 0)
+    
+    local FillCorner = Instance.new("UICorner")
+    FillCorner.CornerRadius = UDim.new(1, 0)
+    FillCorner.Parent = SliderFill
+    
+    SliderButton.Name = "SliderButton"
+    SliderButton.Parent = SliderBackground
+    SliderButton.BackgroundTransparency = 1
+    SliderButton.Size = UDim2.new(1, 0, 1, 0)
+    SliderButton.Text = ""
+    
+    local function UpdateSlider(input)
+        local pos = UDim2.new(math.clamp((input.Position.X - SliderBackground.AbsolutePosition.X) / SliderBackground.AbsoluteSize.X, 0, 1), 0, 1, 0)
+        SliderFill.Size = pos
+        local value = math.floor(min + ((max - min) * pos.X.Scale))
+        SliderValue.Text = tostring(value)
+        callback(value)
+    end
+    
+    SliderButton.MouseButton1Down:Connect(function()
+        local connection
+        connection = RunService.RenderStepped:Connect(function()
+            if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+                UpdateSlider(UserInputService:GetMouseLocation())
+            else
+                connection:Disconnect()
+            end
+        end)
+    end)
+        
+        -- Make sure new elements are subject to search
+        local function addSearchableElement(element)
+            updateSearch()
+        end
+        
+        -- Modify ElementLibrary to update search when new elements are added
+        function ElementLibrary:CreateButton(text, callback)
+            local button = -- [Previous button creation code]
+            addSearchableElement(button)
+            return button
+        end
+        
+        function ElementLibrary:CreateToggle(text, default, callback)
+            local toggle = -- [Previous toggle creation code]
+            addSearchableElement(toggle)
+            return toggle
+        end
+        
+        function ElementLibrary:CreateSlider(text, min, max, default, callback)
+            local slider = -- [Previous slider creation code]
+            addSearchableElement(slider)
+            return slider
+        end
+        
+        return ElementLibrary
+    end
+    
+    return TabLibrary
+end
+
+return Library
