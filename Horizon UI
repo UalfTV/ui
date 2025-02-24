@@ -1,0 +1,317 @@
+-- Horizon V1
+-- Made by zyzzlo
+local Library = {}
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local ColorPalette = {
+    Background = Color3.fromRGB(50, 50, 60),
+    Secondary = Color3.fromRGB(65, 65, 75),
+    Accent = Color3.fromRGB(90, 120, 200),
+    Text = Color3.fromRGB(245, 245, 245),
+    Border = Color3.fromRGB(100, 100, 110)
+}
+
+local function EnableDrag(frame)
+    local dragStartPos, frameStartPos
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragStartPos = input.Position
+            frameStartPos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragStartPos = nil
+                end
+            end)
+        end
+    end)
+    
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement and dragStartPos then
+            local delta = input.Position - dragStartPos
+            frame.Position = UDim2.new(
+                frameStartPos.X.Scale,
+                frameStartPos.X.Offset + delta.X,
+                frameStartPos.Y.Scale,
+                frameStartPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
+
+local function CreateGradient(parent, colors)
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new(colors)
+    gradient.Rotation = -15
+    gradient.Parent = parent
+    return gradient
+end
+
+local function CreateShadow(parent)
+    local shadow = Instance.new("ImageLabel")
+    shadow.Name = "Shadow"
+    shadow.Image = "rbxassetid://5554236805"
+    shadow.ScaleType = Enum.ScaleType.Slice
+    shadow.SliceCenter = Rect.new(23, 23, 277, 277)
+    shadow.Size = UDim2.new(1, 30, 1, 30)
+    shadow.Position = UDim2.new(0, -15, 0, -15)
+    shadow.BackgroundTransparency = 1
+    shadow.ImageTransparency = 0.2
+    shadow.ImageColor3 = Color3.new(0, 0, 0)
+    shadow.ZIndex = -1
+    shadow.Parent = parent
+    return shadow
+end
+
+function Library:CreateWindow(name)
+    local MainUI = Instance.new("ScreenGui")
+    MainUI.Name = "HorizonUI"
+    MainUI.Parent = CoreGui
+    MainUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Size = UDim2.new(0, 800, 0, 600)
+    MainFrame.Position = UDim2.new(0.5, -400, 0.5, -300)
+    MainFrame.BackgroundColor3 = ColorPalette.Background
+    MainFrame.ClipsDescendants = true
+    MainFrame.Parent = MainUI
+
+    EnableDrag(MainFrame)
+    CreateShadow(MainFrame)
+    
+    local MainCorner = Instance.new("UICorner")
+    MainCorner.CornerRadius = UDim.new(0, 12)
+    MainCorner.Parent = MainFrame
+
+    CreateGradient(MainFrame, {ColorPalette.Background, ColorPalette.Secondary})
+
+    local SideBar = Instance.new("Frame")
+    SideBar.Size = UDim2.new(0, 200, 1, 0)
+    SideBar.BackgroundColor3 = ColorPalette.Secondary
+    SideBar.Parent = MainFrame
+
+    local SideCorner = Instance.new("UICorner")
+    SideCorner.CornerRadius = UDim.new(0, 12)
+    SideCorner.Parent = SideBar
+
+    CreateGradient(SideBar, {ColorPalette.Secondary, ColorPalette.Background})
+
+    local ContentArea = Instance.new("Frame")
+    ContentArea.BackgroundTransparency = 1
+    ContentArea.Position = UDim2.new(0, 210, 0, 60)
+    ContentArea.Size = UDim2.new(1, -220, 1, -70)
+    ContentArea.ClipsDescendants = true
+    ContentArea.Parent = MainFrame
+
+    local SearchContainer = Instance.new("Frame")
+    SearchContainer.Position = UDim2.new(0, 210, 0, 15)
+    SearchContainer.Size = UDim2.new(0, 570, 0, 30)
+    SearchContainer.BackgroundTransparency = 1
+    SearchContainer.Parent = MainFrame
+
+    local SearchBar = Instance.new("TextBox")
+    SearchBar.Size = UDim2.new(1, -40, 1, 0)
+    SearchBar.Position = UDim2.new(0, 35, 0, 0)
+    SearchBar.Font = Enum.Font.GothamMedium
+    SearchBar.PlaceholderText = "Search..."
+    SearchBar.TextColor3 = ColorPalette.Text
+    SearchBar.PlaceholderColor3 = Color3.fromRGB(170, 170, 170)
+    SearchBar.BackgroundColor3 = ColorPalette.Secondary
+    SearchBar.Parent = SearchContainer
+
+    local SearchCorner = Instance.new("UICorner")
+    SearchCorner.CornerRadius = UDim.new(0, 8)
+    SearchCorner.Parent = SearchBar
+
+    CreateGradient(SearchBar, {ColorPalette.Secondary, ColorPalette.Background})
+
+    local SearchIcon = Instance.new("ImageLabel")
+    SearchIcon.Image = "rbxassetid://6031094667"
+    SearchIcon.Size = UDim2.new(0, 20, 0, 20)
+    SearchIcon.Position = UDim2.new(0, 10, 0, 5)
+    SearchIcon.ImageColor3 = Color3.fromRGB(170, 170, 170)
+    SearchIcon.Parent = SearchContainer
+
+    local TabLibrary = {}
+    local currentTab = nil
+
+    function TabLibrary:CreateTab(name, icon)
+        local tab = {elements = {}}
+        
+        local TabButton = Instance.new("TextButton")
+        TabButton.Size = UDim2.new(0.9, 0, 0, 45)
+        TabButton.Text = "    "..name
+        TabButton.Font = Enum.Font.GothamSemibold
+        TabButton.TextColor3 = ColorPalette.Text
+        TabButton.BackgroundColor3 = ColorPalette.Secondary
+        TabButton.Parent = SideBar
+
+        CreateGradient(TabButton, {ColorPalette.Secondary, ColorPalette.Background})
+        
+        if icon then
+            local Icon = Instance.new("ImageLabel")
+            Icon.Image = icon
+            Icon.Size = UDim2.new(0, 20, 0, 20)
+            Icon.Position = UDim2.new(0, 10, 0.5, -10)
+            Icon.ImageColor3 = ColorPalette.Text
+            Icon.Parent = TabButton
+        end
+
+        local TabContent = Instance.new("Frame")
+        TabContent.BackgroundTransparency = 1
+        TabContent.Size = UDim2.new(1, 0, 1, 0)
+        TabContent.Visible = false
+        TabContent.Parent = ContentArea
+
+        local ElementLibrary = {}
+
+        function ElementLibrary:CreateButton(text, callback)
+            local Button = Instance.new("TextButton")
+            Button.Text = text
+            Button.Size = UDim2.new(1, 0, 0, 40)
+            Button.Font = Enum.Font.GothamSemibold
+            Button.TextColor3 = ColorPalette.Text
+            Button.BackgroundColor3 = ColorPalette.Secondary
+            Button.Parent = TabContent
+
+            CreateGradient(Button, {ColorPalette.Secondary, ColorPalette.Background})
+
+            Button.MouseEnter:Connect(function()
+                TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundTransparency = 0.1}):Play()
+            end)
+
+            Button.MouseLeave:Connect(function()
+                TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundTransparency = 0}):Play()
+            end)
+
+            Button.MouseButton1Click:Connect(callback)
+            
+            table.insert(tab.elements, {instance = Button, text = text:lower()})
+            return Button
+        end
+
+        function ElementLibrary:CreateToggle(text, default, callback)
+            local ToggleFrame = Instance.new("Frame")
+            ToggleFrame.Size = UDim2.new(1, 0, 0, 40)
+            ToggleFrame.BackgroundColor3 = ColorPalette.Secondary
+            ToggleFrame.Parent = TabContent
+
+            local ToggleButton = Instance.new("TextButton")
+            ToggleButton.Text = text
+            ToggleButton.Size = UDim2.new(1, 0, 1, 0)
+            ToggleButton.Font = Enum.Font.GothamSemibold
+            ToggleButton.TextColor3 = ColorPalette.Text
+            ToggleButton.BackgroundTransparency = 1
+            ToggleButton.Parent = ToggleFrame
+
+            local state = default or false
+            local Indicator = Instance.new("Frame")
+            Indicator.Size = UDim2.new(0, 30, 0, 20)
+            Indicator.Position = UDim2.new(0.9, -35, 0.5, -10)
+            Indicator.BackgroundColor3 = ColorPalette.Background
+            Indicator.Parent = ToggleFrame
+
+            local IndicatorFill = Instance.new("Frame")
+            IndicatorFill.Size = UDim2.new(0, 16, 0, 16)
+            IndicatorFill.Position = default and UDim2.new(0.1, 0, 0.5, -8) or UDim2.new(0.5, 0, 0.5, -8)
+            IndicatorFill.BackgroundColor3 = default and ColorPalette.Accent or Color3.fromRGB(150, 150, 150)
+            IndicatorFill.Parent = Indicator
+
+            local function UpdateToggle()
+                local newPos = state and UDim2.new(0.1, 0, 0.5, -8) or UDim2.new(0.5, 0, 0.5, -8)
+                local newColor = state and ColorPalette.Accent or Color3.fromRGB(150, 150, 150)
+                TweenService:Create(IndicatorFill, TweenInfo.new(0.3), {Position = newPos, BackgroundColor3 = newColor}):Play()
+            end
+
+            ToggleButton.MouseButton1Click:Connect(function()
+                state = not state
+                UpdateToggle()
+                callback(state)
+            end)
+
+            table.insert(tab.elements, {instance = ToggleFrame, text = text:lower()})
+            return ToggleFrame
+        end
+
+        function ElementLibrary:CreateSlider(text, min, max, default, callback)
+            local SliderFrame = Instance.new("Frame")
+            SliderFrame.Size = UDim2.new(1, 0, 0, 60)
+            SliderFrame.BackgroundColor3 = ColorPalette.Secondary
+            SliderFrame.Parent = TabContent
+
+            local SliderText = Instance.new("TextLabel")
+            SliderText.Text = text
+            SliderText.Font = Enum.Font.GothamSemibold
+            SliderText.TextColor3 = ColorPalette.Text
+            SliderText.Size = UDim2.new(1, -20, 0, 20)
+            SliderText.Position = UDim2.new(0, 10, 0, 5)
+            SliderText.Parent = SliderFrame
+
+            local SliderTrack = Instance.new("Frame")
+            SliderTrack.Size = UDim2.new(1, -20, 0, 8)
+            SliderTrack.Position = UDim2.new(0, 10, 0, 35)
+            SliderTrack.BackgroundColor3 = ColorPalette.Background
+            SliderTrack.Parent = SliderFrame
+
+            local SliderFill = Instance.new("Frame")
+            SliderFill.Size = UDim2.new((default - min)/(max - min), 0, 1, 0)
+            SliderFill.BackgroundColor3 = ColorPalette.Accent
+            SliderFill.Parent = SliderTrack
+
+            local SliderButton = Instance.new("TextButton")
+            SliderButton.Size = UDim2.new(1, 0, 1, 0)
+            SliderButton.BackgroundTransparency = 1
+            SliderButton.Parent = SliderTrack
+
+            SliderButton.MouseButton1Down:Connect(function()
+                local connection
+                connection = RunService.Heartbeat:Connect(function()
+                    if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+                        local pos = math.clamp((UserInputService:GetMouseLocation().X - SliderTrack.AbsolutePosition.X) / SliderTrack.AbsoluteSize.X, 0, 1)
+                        SliderFill.Size = UDim2.new(pos, 0, 1, 0)
+                        callback(math.floor(min + (max - min) * pos))
+                    else
+                        connection:Disconnect()
+                    end
+                end)
+            end)
+
+            table.insert(tab.elements, {instance = SliderFrame, text = text:lower()})
+            return SliderFrame
+        end
+
+        SearchBar:GetPropertyChangedSignal("Text"):Connect(function()
+            local searchText = SearchBar.Text:lower()
+            if currentTab then
+                for _, element in pairs(currentTab.elements) do
+                    element.instance.Visible = element.text:find(searchText) ~= nil
+                end
+            end
+        end)
+
+        TabButton.MouseButton1Click:Connect(function()
+            if currentTab then
+                for _, element in pairs(currentTab.elements) do
+                    element.instance.Visible = false
+                end
+            end
+            
+            TabContent.Visible = true
+            currentTab = tab
+            
+            for _, element in pairs(currentTab.elements) do
+                element.instance.Visible = true
+            end
+            
+            SearchBar.Text = SearchBar.Text
+        end)
+
+        return ElementLibrary
+    end
+    
+    return TabLibrary
+end
+
+return Library
