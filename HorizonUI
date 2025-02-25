@@ -33,7 +33,7 @@ function Library:CreateWindow(name)
     
     MainFrame.Name = "MainFrame"
     MainFrame.Parent = MainUI
-    MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 50) -- Color más claro
+    MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 50) 
     MainFrame.Position = UDim2.new(0.5, -400, 0.5, -300)
     MainFrame.Size = UDim2.new(0, 800, 0, 600)
     MainFrame.ClipsDescendants = true
@@ -95,8 +95,8 @@ function Library:CreateWindow(name)
     MainCorner.Parent = MainFrame
     
     CreateGradient(MainFrame, ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 60)), -- Más claro
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 30, 45)) -- Más claro
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 60)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 30, 45)) 
     }), 45)
     
     local Shadow = Instance.new("ImageLabel")
@@ -113,7 +113,7 @@ function Library:CreateWindow(name)
     
     SideBar.Name = "SideBar"
     SideBar.Parent = MainFrame
-    SideBar.BackgroundColor3 = Color3.fromRGB(25, 25, 35) -- Más claro
+    SideBar.BackgroundColor3 = Color3.fromRGB(25, 25, 35) 
     SideBar.Size = UDim2.new(0, 200, 1, 0)
     
     local SideBarCorner = Instance.new("UICorner")
@@ -121,8 +121,8 @@ function Library:CreateWindow(name)
     SideBarCorner.Parent = SideBar
     
     CreateGradient(SideBar, ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 45)), -- Más claro
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 25, 35)) -- Más claro
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 45)), 
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 25, 35)) 
     }))
     
     local BrandFrame = Instance.new("Frame")
@@ -216,7 +216,7 @@ function Library:CreateWindow(name)
     
     local SearchBar = Instance.new("TextBox")
     SearchBar.Parent = SearchContainer
-    SearchBar.BackgroundColor3 = Color3.fromRGB(50, 50, 75) -- Más claro
+    SearchBar.BackgroundColor3 = Color3.fromRGB(50, 50, 75) 
     SearchBar.BackgroundTransparency = 0.2
     SearchBar.Size = UDim2.new(1, -40, 1, 0)
     SearchBar.Position = UDim2.new(0, 35, 0, 0)
@@ -234,11 +234,11 @@ function Library:CreateWindow(name)
     SearchBarCorner.Parent = SearchBar
     
     CreateGradient(SearchBar, ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 60, 90)), -- Más claro
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 50, 75)) -- Más claro
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 60, 90)), 
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 50, 75)) 
     }), 90)
     
-    CreateStroke(SearchBar, 1, Color3.fromRGB(90, 90, 120)) -- Borde más claro
+    CreateStroke(SearchBar, 1, Color3.fromRGB(90, 90, 120)) 
     
     local SearchIcon = Instance.new("ImageLabel")
     SearchIcon.Name = "SearchIcon"
@@ -247,7 +247,7 @@ function Library:CreateWindow(name)
     SearchIcon.Position = UDim2.new(0, 10, 0, 5)
     SearchIcon.Size = UDim2.new(0, 20, 0, 20)
     SearchIcon.Image = "rbxassetid://6031094667"
-    SearchIcon.ImageColor3 = Color3.fromRGB(200, 200, 200) -- Más claro
+    SearchIcon.ImageColor3 = Color3.fromRGB(200, 200, 200) 
     
     SearchIcon.MouseEnter:Connect(function()
         TweenService:Create(SearchIcon, TweenInfo.new(0.2), {
@@ -308,26 +308,26 @@ function Library:CreateWindow(name)
         
         -- Botón redondeado
         local TabButtonCorner = Instance.new("UICorner")
-        TabButtonCorner.CornerRadius = UDim.new(1, 0) -- Esquinas completamente redondeadas
+        TabButtonCorner.CornerRadius = UDim.new(1, 0) 
         TabButtonCorner.Parent = TabButton
         
         TabButton.Name = name.."Tab"
         TabButton.Parent = SideBarList
-        TabButton.BackgroundColor3 = Color3.fromRGB(40, 40, 60) -- Más claro
-        TabButton.Size = UDim2.new(0.8, 0, 0, 45) -- Tamaño ajustado
-        TabButton.Position = UDim2.new(0.1, 0, 0, 0) -- Centrado
+        TabButton.BackgroundColor3 = Color3.fromRGB(40, 40, 60) 
+        TabButton.Size = UDim2.new(0.8, 0, 0, 45) 
+        TabButton.Position = UDim2.new(0.1, 0, 0, 0) 
         TabButton.Font = Enum.Font.GothamSemibold
         TabButton.Text = name
-        TabButton.TextColor3 = Color3.fromRGB(220, 220, 255) -- Texto más claro
+        TabButton.TextColor3 = Color3.fromRGB(220, 220, 255) 
         TabButton.TextSize = 14
         TabButton.AutoButtonColor = false
         
         CreateGradient(TabButton, ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Color3.fromRGB(50, 50, 75)), -- Gradiente más claro
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(50, 50, 75)), 
             ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 40, 60))
         }))
         
-        CreateStroke(TabButton, 1.5, Color3.fromRGB(80, 80, 110)) -- Borde más claro
+        CreateStroke(TabButton, 1.5, Color3.fromRGB(80, 80, 110)) 
         
         if icon then
             local Icon = Instance.new("ImageLabel")
@@ -336,7 +336,7 @@ function Library:CreateWindow(name)
             Icon.Position = UDim2.new(0, 10, 0.5, -10)
             Icon.Size = UDim2.new(0, 20, 0, 20)
             Icon.Image = icon
-            Icon.ImageColor3 = Color3.fromRGB(220, 220, 255) -- Icono más claro
+            Icon.ImageColor3 = Color3.fromRGB(220, 220, 255) 
             TabButton.Text = "    "..name
         end
         
@@ -385,7 +385,7 @@ function Library:CreateWindow(name)
             local Button = Instance.new("TextButton")
             Button.Name = text.."Button"
             Button.Parent = TabContent
-            Button.BackgroundColor3 = Color3.fromRGB(45, 45, 65) -- Más claro
+            Button.BackgroundColor3 = Color3.fromRGB(45, 45, 65) 
             Button.Size = UDim2.new(1, 0, 0, 40)
             Button.Font = Enum.Font.GothamSemibold
             Button.Text = text
@@ -398,11 +398,11 @@ function Library:CreateWindow(name)
             ButtonCorner.CornerRadius = UDim.new(0, 8)
             ButtonCorner.Parent = Button
             
-            CreateStroke(Button, 1.5, Color3.fromRGB(70, 70, 100)) -- Borde más claro
+            CreateStroke(Button, 1.5, Color3.fromRGB(70, 70, 100)) 
             
             Button.MouseEnter:Connect(function()
                 TweenService:Create(Button, TweenInfo.new(0.2), {
-                    BackgroundColor3 = Color3.fromRGB(55, 55, 80) -- Hover más claro
+                    BackgroundColor3 = Color3.fromRGB(55, 55, 80) 
                 }):Play()
             })
             
@@ -449,7 +449,7 @@ function Library:CreateWindow(name)
             local ToggleFrame = Instance.new("Frame")
             ToggleFrame.Name = text.."Toggle"
             ToggleFrame.Parent = TabContent
-            ToggleFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 65) -- Más claro
+            ToggleFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 65) 
             ToggleFrame.Size = UDim2.new(1, 0, 0, 40)
             ToggleFrame.Active = true
             
@@ -457,7 +457,7 @@ function Library:CreateWindow(name)
             ToggleCorner.CornerRadius = UDim.new(0, 8)
             ToggleCorner.Parent = ToggleFrame
             
-            CreateStroke(ToggleFrame, 1.5, Color3.fromRGB(70, 70, 100)) -- Borde más claro
+            CreateStroke(ToggleFrame, 1.5, Color3.fromRGB(70, 70, 100)) 
             
             local ToggleButton = Instance.new("TextButton")
             ToggleButton.Text = text
@@ -500,14 +500,14 @@ function Library:CreateWindow(name)
             SliderFrame.Name = text.."Slider"
             SliderFrame.Parent = TabContent
             SliderFrame.Size = UDim2.new(1, 0, 0, 60)
-            SliderFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 65) -- Más claro
+            SliderFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
             SliderFrame.Active = true
             
             local SliderCorner = Instance.new("UICorner")
             SliderCorner.CornerRadius = UDim.new(0, 8)
             SliderCorner.Parent = SliderFrame
             
-            CreateStroke(SliderFrame, 1.5, Color3.fromRGB(70, 70, 100)) -- Borde más claro
+            CreateStroke(SliderFrame, 1.5, Color3.fromRGB(70, 70, 100))
             
             local SliderText = Instance.new("TextLabel")
             SliderText.Text = text
@@ -520,12 +520,12 @@ function Library:CreateWindow(name)
             local SliderBackground = Instance.new("Frame")
             SliderBackground.Size = UDim2.new(1, -20, 0, 5)
             SliderBackground.Position = UDim2.new(0, 10, 0, 35)
-            SliderBackground.BackgroundColor3 = Color3.fromRGB(35, 35, 50) -- Más claro
+            SliderBackground.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
             SliderBackground.Parent = SliderFrame
             
             local SliderFill = Instance.new("Frame")
             SliderFill.Size = UDim2.new((default - min)/(max - min), 0, 1, 0)
-            SliderFill.BackgroundColor3 = Color3.fromRGB(0, 170, 255) -- Color más vibrante
+            SliderFill.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
             SliderFill.Parent = SliderBackground
             
             local SliderButton = Instance.new("TextButton")
